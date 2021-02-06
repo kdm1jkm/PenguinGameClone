@@ -2,11 +2,12 @@
 
 namespace PenguinGameClone
 {
-    class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Game game = new Game();
+            game.GameLoop();
         }
     }
 }
