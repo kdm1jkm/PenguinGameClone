@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SFML.Window;
 using static SFML.Window.Keyboard;
 
@@ -19,7 +18,7 @@ namespace PenguinGameClone
         {
             PressedKeys.Clear();
             ReleasedKeys.Clear();
-            
+
             PressedButtons.Clear();
             PressedButtons.Clear();
         }
@@ -78,7 +77,7 @@ namespace PenguinGameClone
         {
             return ReleasedButtons.Contains(button);
         }
-        
+
         private static bool IsButtonHeld(Mouse.Button button)
         {
             return HeldButtons.Contains(button);

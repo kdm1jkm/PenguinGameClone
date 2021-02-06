@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Resources;
+﻿using System.Collections.Generic;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -9,10 +7,10 @@ namespace PenguinGameClone
 {
     public class GameStateMain : IGameState
     {
-        private readonly Game _game;
+        private readonly GameBoard _board;
 
         private readonly List<IEntity> _entities;
-        private readonly GameBoard _board;
+        private readonly Game _game;
         private View _view;
 
         public GameStateMain(Game game)
@@ -29,25 +27,20 @@ namespace PenguinGameClone
         public void HandleInput()
         {
             if (InputManager.IsKeyPressed(Keyboard.Key.A))
-            {
                 _entities.Add(new Ball(Ball.Team.TEAM_RED) {Position = (Vector2f) Mouse.GetPosition(_game.Window)});
-            }
         }
 
         public void Update(Time elapsed)
         {
-            foreach (var entity in _entities)
-            {
-                entity.Update(elapsed);
-            }
+            foreach (var entity in _entities) entity.Update(elapsed);
 
             var interval = 10.0f;
 
-            float screenRatio = _game.Height / (float) _game.Width;
+            var screenRatio = _game.Height / (float) _game.Width;
 
             float viewHeight;
             float viewWidth;
-            
+
             if (_game.Width > _game.Height)
             {
                 viewHeight = _board.Size.Y + interval * 2;
@@ -70,10 +63,7 @@ namespace PenguinGameClone
 
         public void Render()
         {
-            foreach (var entity in _entities)
-            {
-                _game.Window.Draw(entity);
-            }
+            foreach (var entity in _entities) _game.Window.Draw(entity);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace PenguinGameClone
         private static readonly string WindowTitle = "DeveloperRPG";
         public readonly Queue<IGameState> States = new();
         private bool _isFullScreen;
-        public uint Height =  VideoMode.DesktopMode.Height / 2;
+        public uint Height = VideoMode.DesktopMode.Height / 2;
         public uint Width = VideoMode.DesktopMode.Width / 2;
         public RenderWindow Window;
 
@@ -30,7 +30,8 @@ namespace PenguinGameClone
             Window.Closed += (sender, _) => ((Window) sender)?.Close();
             Window.KeyPressed += (_, e) => InputManager.PressKey(e.Code);
             Window.KeyReleased += (_, e) => InputManager.ReleaseKey(e.Code);
-            Window.MouseButtonPressed += (sender, e) => Console.Out.WriteLine($"press");
+            Window.MouseButtonPressed += (_, e) => InputManager.PressButton(e.Button);
+            Window.MouseButtonReleased += (_, e) => InputManager.ReleaseButton(e.Button);
             Window.Resized += (_, args) =>
             {
                 Width = args.Width;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SFML.Graphics;
 using SFML.System;
 
@@ -11,14 +10,14 @@ namespace PenguinGameClone
         {
             TEAM_RED,
             TEAM_BLUE
-        };
+        }
 
         public const float RADIUS = 3.0f;
 
-        private static readonly Dictionary<Team, CircleShape> SHAPES = new Dictionary<Team, CircleShape>()
+        private static readonly Dictionary<Team, CircleShape> SHAPES = new()
         {
             {
-                Team.TEAM_RED, new CircleShape()
+                Team.TEAM_RED, new CircleShape
                 {
                     Radius = RADIUS,
                     OutlineColor = Color.Black,
@@ -26,27 +25,27 @@ namespace PenguinGameClone
                 }
             },
             {
-                Team.TEAM_BLUE, new CircleShape()
+                Team.TEAM_BLUE, new CircleShape
                 {
-                    Radius =   RADIUS,
+                    Radius = RADIUS,
                     OutlineColor = Color.Black,
                     FillColor = Color.Blue
                 }
             }
         };
 
-        private CircleShape _shape;
+        private readonly CircleShape _shape;
+
+        public Ball(Team team)
+        {
+            _shape = new CircleShape(SHAPES[team]);
+        }
 
 
         public Vector2f Position
         {
             get => _shape.Position;
             set => _shape.Position = value;
-        }
-
-        public Ball(Team team)
-        {
-            _shape = new CircleShape(SHAPES[team]);
         }
 
         public void Draw(RenderTarget target, RenderStates states)
@@ -56,7 +55,6 @@ namespace PenguinGameClone
 
         public void Update(Time elapsed)
         {
-            
         }
     }
 }

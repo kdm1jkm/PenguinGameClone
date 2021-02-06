@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 
 namespace PenguinGameClone
@@ -7,6 +6,15 @@ namespace PenguinGameClone
     public class GameBoard : IEntity
     {
         private readonly RectangleShape _shape;
+
+        public GameBoard()
+        {
+            _shape = new RectangleShape
+            {
+                Size = new Vector2f(100, 100),
+                FillColor = Color.White
+            };
+        }
 
         public Vector2f Position
         {
@@ -22,15 +30,6 @@ namespace PenguinGameClone
 
         public Vector2f Center => _shape.Position + _shape.Size / 2;
 
-        public GameBoard()
-        {
-            _shape = new RectangleShape
-            {
-                Size = new Vector2f(100, 100),
-                FillColor = Color.White
-            };
-        }
-        
         public void Draw(RenderTarget target, RenderStates states)
         {
             _shape.Draw(target, states);
@@ -38,7 +37,6 @@ namespace PenguinGameClone
 
         public void Update(Time elapsed)
         {
-            
         }
     }
 }
