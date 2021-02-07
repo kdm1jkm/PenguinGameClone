@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -7,35 +9,80 @@ namespace PenguinGameClone
 {
     public class GameStateMain : IGameState
     {
-        private readonly GameBoard _board;
+        private readonly GameBoard _board = new();
 
-        private readonly List<IEntity> _entities;
+        private readonly Layer _backgroundLayer = new();
+        private readonly Layer _balls = new();
+        private readonly List<Layer> _layers;
         private readonly Game _game;
         private View _view;
 
         public GameStateMain(Game game)
         {
             _game = game;
-            _board = new GameBoard();
-
-            _entities = new List<IEntity>
+            _layers = new List<Layer>
             {
-                _board
+                _backgroundLayer,
+                _balls
             };
+            _backgroundLayer.Add(_board);
         }
 
         public void HandleInput()
         {
+            HandleAddBall();
+        }
+
+        private void HandleAddBall()
+        {
+            var mousePosition = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window));
+            Ball.Team? team = null;
             if (InputManager.IsKeyPressed(Keyboard.Key.A))
-                _entities.Add(new Ball(Ball.Team.TEAM_RED) {Position = (Vector2f) Mouse.GetPosition(_game.Window)});
+            {
+                team = Ball.Team.TEAM_RED;
+            }
+            else if (InputManager.IsKeyPressed(Keyboard.Key.S))
+            {
+                team = Ball.Team.TEAM_BLUE;
+            }
+
+            if (!team.HasValue) return;
+            Ball ball = new Ball(team.Value) {Position = mousePosition};
+            _balls.Add(ball);
         }
 
         public void Update(Time elapsed)
         {
-            foreach (var entity in _entities) entity.Update(elapsed);
+            UpdateEntities(elapsed);
+            UpdateView(10.0f);
+            UpdateSelectedBall();
+        }
 
-            var interval = 10.0f;
+        private void UpdateSelectedBall()
+        {
+            float criteria = Ball.RADIUS * 1.1f;
+            float minLength = float.MaxValue;
+            Ball minLengthBall = null;
+            foreach (var _ball in _balls)
+            {
+                Ball ball = (Ball) _ball;
+                Vector2f diff = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window)) - ball.Position;
+                float length = (float) Math.Sqrt(Math.Pow(diff.X, 2) + Math.Pow(diff.Y, 2));
+                if (length < minLength)
+                {
+                    minLength = length;
+                    minLengthBall = ball;
+                }
+            }
 
+            if (minLength < criteria)
+            {
+                minLengthBall!.Selected = true;
+            }
+        }
+
+        private void UpdateView(float interval)
+        {
             var screenRatio = _game.Height / (float) _game.Width;
 
             float viewHeight;
@@ -54,16 +101,31 @@ namespace PenguinGameClone
 
             _view = new View(_board.Center, new Vector2f(viewWidth, viewHeight));
 
-            // Console.Out.WriteLine($"Center: {_board.Center}");
-            // Console.Out.WriteLine($"Mouse: {Mouse.GetPosition(_game.Window)}");
-            // Console.Out.WriteLine($"================================");
-
             _game.Window.SetView(_view);
+        }
+
+        private void UpdateEntities(Time elapsed)
+        {
+            foreach (var entity in _layers.SelectMany(layer => layer))
+            {
+                entity.Update(elapsed);
+            }
         }
 
         public void Render()
         {
-            foreach (var entity in _entities) _game.Window.Draw(entity);
+            foreach (var layer in _layers)
+            {
+                _game.Window.Draw(layer);
+            }
+
+            foreach (var ball in _balls)
+            {
+                if (((Ball) ball).Selected)
+                {
+                    _game.Window.Draw(ball);
+                }
+            }
         }
     }
 }

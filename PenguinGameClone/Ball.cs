@@ -13,23 +13,26 @@ namespace PenguinGameClone
         }
 
         public const float RADIUS = 3.0f;
+        public const float LINE_THICKNESS = -0.7f;
+
+        public bool Selected
+        {
+            get => _shape.OutlineThickness != 0.0f;
+            set => _shape.OutlineThickness = value ? LINE_THICKNESS : 0.0f;
+        }
 
         private static readonly Dictionary<Team, CircleShape> SHAPES = new()
         {
             {
                 Team.TEAM_RED, new CircleShape
                 {
-                    Radius = RADIUS,
-                    OutlineColor = Color.Black,
-                    FillColor = Color.Red
+                    FillColor = Color.Red,
                 }
             },
             {
                 Team.TEAM_BLUE, new CircleShape
                 {
-                    Radius = RADIUS,
-                    OutlineColor = Color.Black,
-                    FillColor = Color.Blue
+                    FillColor = Color.Blue,
                 }
             }
         };
@@ -38,7 +41,13 @@ namespace PenguinGameClone
 
         public Ball(Team team)
         {
-            _shape = new CircleShape(SHAPES[team]);
+            _shape = new CircleShape(SHAPES[team])
+            {
+                OutlineColor = Color.Black,
+                Radius = RADIUS,
+                Origin = new Vector2f(RADIUS, RADIUS)
+            };
+            Selected = false;
         }
 
 
@@ -55,6 +64,7 @@ namespace PenguinGameClone
 
         public void Update(Time elapsed)
         {
+            Selected = false;
         }
     }
 }
