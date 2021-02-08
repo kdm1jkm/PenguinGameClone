@@ -14,6 +14,8 @@ namespace PenguinGameClone
             _drawables = new List<IEntity>();
         }
 
+        public IEntity this[int index] => _drawables[index];
+
         public void Add(IEntity value)
         {
             _drawables.Add(value);

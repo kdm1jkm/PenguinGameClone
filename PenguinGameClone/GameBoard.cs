@@ -6,13 +6,15 @@ namespace PenguinGameClone
     public class GameBoard : IEntity
     {
         private readonly RectangleShape _shape;
+        
+        public const  float BOARD_SIZE = 100.0f;
 
         public GameBoard()
         {
             _shape = new RectangleShape
             {
-                Size = new Vector2f(100, 100),
-                FillColor = Color.White
+                Size = new Vector2f(BOARD_SIZE,BOARD_SIZE),
+                FillColor = new Color(253,255,252)
             };
         }
 

@@ -1,9 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Box2DX.Collision;
+using Box2DX.Common;
+using Box2DX.Dynamics;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
+using Color = SFML.Graphics.Color;
+using Math = System.Math;
 
 namespace PenguinGameClone
 {
@@ -13,9 +17,17 @@ namespace PenguinGameClone
 
         private readonly Layer _backgroundLayer = new();
         private readonly Layer _balls = new();
+        private readonly List<Body> _ballBodies = new();
         private readonly List<Layer> _layers;
         private readonly Game _game;
         private View _view;
+        private const float PHYSICS_INTERVAL = 10.0f;
+        private World _world = new World(new AABB()
+        {
+            LowerBound = new Vec2(-PHYSICS_INTERVAL,y: -PHYSICS_INTERVAL).Devide(10.0f),
+            UpperBound = new Vec2(GameBoard.BOARD_SIZE + PHYSICS_INTERVAL, GameBoard.BOARD_SIZE + PHYSICS_INTERVAL)
+                .Devide(10.0f)
+        }, Vec2.Zero, true);
 
         public GameStateMain(Game game)
         {
@@ -36,23 +48,41 @@ namespace PenguinGameClone
         private void HandleAddBall()
         {
             var mousePosition = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window));
-            Ball.Team? team = null;
+            Ball.BallInfo team = null;
             if (InputManager.IsKeyPressed(Keyboard.Key.A))
             {
-                team = Ball.Team.TEAM_RED;
+                team = Ball.BallInfo.RED_BALL;
             }
             else if (InputManager.IsKeyPressed(Keyboard.Key.S))
             {
-                team = Ball.Team.TEAM_BLUE;
+                team = Ball.BallInfo.BLUE_BALL;
             }
 
-            if (!team.HasValue) return;
-            Ball ball = new Ball(team.Value) {Position = mousePosition};
+            if (team == null) return;
+            Ball ball = new Ball(team) {Position = mousePosition};
+            Body body = _world.CreateBody(new BodyDef
+            {
+                Position = new Vec2(mousePosition.X, mousePosition.Y).Devide(10)
+            });
+            CircleDef circleDef = new CircleDef()
+            {
+                Radius = Ball.RADIUS/10,
+                Density = 1.0f,
+                Friction = .5f,
+            };
+            body.CreateShape(circleDef);
+            body.SetMassFromShapes();
+            _ballBodies.Add(body);
             _balls.Add(ball);
         }
 
         public void Update(Time elapsed)
         {
+            _world.Step(elapsed.AsSeconds(), 8, 8);
+            for (int i = 0; i < _ballBodies.Count; i++)
+            {
+                _balls[i].Position = _ballBodies[i].GetPosition().ToVector2f()*10;
+            }
             UpdateEntities(elapsed);
             UpdateView(10.0f);
             UpdateSelectedBall();
@@ -63,9 +93,8 @@ namespace PenguinGameClone
             float criteria = Ball.RADIUS * 1.1f;
             float minLength = float.MaxValue;
             Ball minLengthBall = null;
-            foreach (var _ball in _balls)
+            foreach (Ball ball in _balls)
             {
-                Ball ball = (Ball) _ball;
                 Vector2f diff = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window)) - ball.Position;
                 float length = (float) Math.Sqrt(Math.Pow(diff.X, 2) + Math.Pow(diff.Y, 2));
                 if (length < minLength)
@@ -114,6 +143,7 @@ namespace PenguinGameClone
 
         public void Render()
         {
+            _game.Window.Clear(new Color(19,18,0));
             foreach (var layer in _layers)
             {
                 _game.Window.Draw(layer);

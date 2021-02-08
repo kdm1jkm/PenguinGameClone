@@ -1,51 +1,65 @@
-﻿using System.Collections.Generic;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 
 namespace PenguinGameClone
 {
     public class Ball : IEntity
     {
-        public enum Team
+        public class BallInfo
         {
-            TEAM_RED,
-            TEAM_BLUE
+            public static readonly BallInfo RED_BALL =
+                new BallInfo(new Color(179,39,30), new Color(231,123,115));
+
+            public static readonly BallInfo BLUE_BALL =
+                new BallInfo(new Color(10, 36, 99), new Color(20, 75, 204));
+            
+            BallInfo(Color basicColor, Color selectedColor)
+            {
+                BasicColor = basicColor;
+                SelectedColor = selectedColor;
+            }
+            public Color BasicColor { get; }
+            public Color SelectedColor { get; }
+            
         }
 
         public const float RADIUS = 3.0f;
         public const float LINE_THICKNESS = -0.7f;
 
+        private readonly BallInfo _info;
+
+        private bool _selected;
+
         public bool Selected
         {
-            get => _shape.OutlineThickness != 0.0f;
-            set => _shape.OutlineThickness = value ? LINE_THICKNESS : 0.0f;
-        }
-
-        private static readonly Dictionary<Team, CircleShape> SHAPES = new()
-        {
+            get => _selected;
+            set
             {
-                Team.TEAM_RED, new CircleShape
+                _selected = value;
+                if (_selected)
                 {
-                    FillColor = Color.Red,
+                    _shape.OutlineThickness = LINE_THICKNESS;
+                    _shape.FillColor = _info.SelectedColor;
                 }
-            },
-            {
-                Team.TEAM_BLUE, new CircleShape
+                else
                 {
-                    FillColor = Color.Blue,
+                    _shape.OutlineThickness = .0f;
+                    _shape.FillColor = _info.BasicColor;
                 }
             }
-        };
+        }
 
         private readonly CircleShape _shape;
 
-        public Ball(Team team)
+        public Ball(BallInfo info)
         {
-            _shape = new CircleShape(SHAPES[team])
+            _info = info;
+            _shape = new CircleShape
             {
                 OutlineColor = Color.Black,
                 Radius = RADIUS,
-                Origin = new Vector2f(RADIUS, RADIUS)
+                Origin = new Vector2f(RADIUS, RADIUS),
+                FillColor = _info.BasicColor
             };
             Selected = false;
         }
