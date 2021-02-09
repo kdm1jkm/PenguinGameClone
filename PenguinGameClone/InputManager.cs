@@ -38,7 +38,7 @@ namespace PenguinGameClone
             ReleasedKeys.Add(key);
         }
 
-        private static bool IsKeyHeld(Key key)
+        public static bool IsKeyHeld(Key key)
         {
             return HeldKeys.Contains(key);
         }
@@ -78,7 +78,7 @@ namespace PenguinGameClone
             return ReleasedButtons.Contains(button);
         }
 
-        private static bool IsButtonHeld(Mouse.Button button)
+        public static bool IsButtonHeld(Mouse.Button button)
         {
             return HeldButtons.Contains(button);
         }

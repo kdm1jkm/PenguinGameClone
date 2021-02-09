@@ -25,6 +25,11 @@ namespace PenguinGameClone
         {
             return _drawables.Remove(value);
         }
+
+        public void RemoveAt(int index)
+        {
+            _drawables.RemoveAt(index);
+        }
         
         public void Draw(RenderTarget target, RenderStates states)
         {

@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using System;
+using SFML.Graphics;
 using SFML.System;
 
 namespace PenguinGameClone
@@ -31,6 +32,12 @@ namespace PenguinGameClone
         }
 
         public Vector2f Center => _shape.Position + _shape.Size / 2;
+
+        public bool IsContain(Vector2f position)
+        {
+            return position.X > Position.X && position.X < Position.X + Size.X &&
+                   position.Y > Position.Y && position.Y < Position.Y + Size.Y;
+        }
 
         public void Draw(RenderTarget target, RenderStates states)
         {

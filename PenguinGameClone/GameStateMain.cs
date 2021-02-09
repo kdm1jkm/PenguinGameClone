@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Box2DX.Collision;
 using Box2DX.Common;
@@ -49,11 +50,11 @@ namespace PenguinGameClone
         {
             var mousePosition = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window));
             Ball.BallInfo team = null;
-            if (InputManager.IsKeyPressed(Keyboard.Key.A))
+            if (InputManager.IsKeyHeld(Keyboard.Key.A))
             {
                 team = Ball.BallInfo.RED_BALL;
             }
-            else if (InputManager.IsKeyPressed(Keyboard.Key.S))
+            else if (InputManager.IsKeyHeld(Keyboard.Key.S))
             {
                 team = Ball.BallInfo.BLUE_BALL;
             }
@@ -79,9 +80,20 @@ namespace PenguinGameClone
         public void Update(Time elapsed)
         {
             _world.Step(elapsed.AsSeconds(), 8, 8);
+            List<int> removeIndexes = new List<int>();
             for (int i = 0; i < _ballBodies.Count; i++)
             {
                 _balls[i].Position = _ballBodies[i].GetPosition().ToVector2f()*10;
+                if (_ballBodies[i].IsFrozen() || !_board.IsContain(_balls[i].Position))
+                {
+                    removeIndexes.Insert(0, i);
+                }
+            }
+
+            foreach (var index in removeIndexes)
+            {
+                _balls.RemoveAt(index);
+                _ballBodies.RemoveAt(index);
             }
             UpdateEntities(elapsed);
             UpdateView(10.0f);
