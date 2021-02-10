@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -11,6 +10,7 @@ namespace PenguinGameClone
         private static readonly string WindowTitle = "PenguinGame";
         public readonly Queue<IGameState> States = new();
         private bool _isFullScreen;
+        
         public uint Height = VideoMode.DesktopMode.Height / 2;
         public uint Width = VideoMode.DesktopMode.Width / 2;
         public RenderWindow Window;

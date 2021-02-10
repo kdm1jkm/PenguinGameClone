@@ -1,14 +1,12 @@
-﻿using System;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 
 namespace PenguinGameClone
 {
     public class GameBoard : IEntity
     {
-        private readonly RectangleShape _shape;
-
         public const float BOARD_SIZE = 100.0f;
+        private readonly RectangleShape _shape;
 
         public GameBoard()
         {
@@ -17,12 +15,6 @@ namespace PenguinGameClone
                 Size = new Vector2f(BOARD_SIZE, BOARD_SIZE),
                 FillColor = new Color(253, 255, 252)
             };
-        }
-
-        public Vector2f Position
-        {
-            get => _shape.Position;
-            set => _shape.Position = value;
         }
 
         public Vector2f Size
@@ -42,10 +34,10 @@ namespace PenguinGameClone
             set => _shape.Position = value - _shape.Size / 2;
         }
 
-        public bool IsContain(Vector2f position)
+        public Vector2f Position
         {
-            return position.X > Position.X && position.X < Position.X + Size.X &&
-                   position.Y > Position.Y && position.Y < Position.Y + Size.Y;
+            get => _shape.Position;
+            set => _shape.Position = value;
         }
 
         public void Draw(RenderTarget target, RenderStates states)
@@ -55,6 +47,12 @@ namespace PenguinGameClone
 
         public void Update(Time elapsed)
         {
+        }
+
+        public bool IsContain(Vector2f position)
+        {
+            return position.X > Position.X && position.X < Position.X + Size.X &&
+                   position.Y > Position.Y && position.Y < Position.Y + Size.Y;
         }
     }
 }

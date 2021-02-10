@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Box2DX.Collision;
 using Box2DX.Common;
 using Box2DX.Dynamics;
@@ -10,17 +8,41 @@ using SFML.Window;
 using Color = SFML.Graphics.Color;
 using Math = System.Math;
 
+// ReSharper disable PossibleInvalidCastExceptionInForeachLoop
+
 namespace PenguinGameClone
 {
     public class GameStateMain : IGameState
     {
+        private const float PHYSICS_INTERVAL = 10.0f;
+
+        private readonly Game _game;
+        
         private readonly GameBoard _board = new();
-
+        
         private readonly Layer _backgroundLayer = new();
-
         private readonly Layer _balls = new();
 
-        // private readonly Layer _arrows = new();
+        private readonly List<Body> _ballBodies = new();
+
+        private readonly World _world;
+
+        private View _view;
+        
+        private Ball _selectedBall;
+
+        public GameStateMain(Game game)
+        {
+            _game = game;
+            _backgroundLayer.Add(_board);
+            _world = new World(new AABB
+            {
+                LowerBound = new Vec2(-PHYSICS_INTERVAL, -PHYSICS_INTERVAL).Devide(10.0f),
+                UpperBound = new Vec2(GameBoard.BOARD_SIZE + PHYSICS_INTERVAL, GameBoard.BOARD_SIZE + PHYSICS_INTERVAL)
+                    .Devide(10.0f)
+            }, Vec2.Zero, true);
+        }
+
         private Layer Arrows
         {
             get
@@ -32,31 +54,15 @@ namespace PenguinGameClone
             }
         }
 
-        private readonly List<Body> _ballBodies = new();
-        private readonly Game _game;
-        private View _view;
-        private const float PHYSICS_INTERVAL = 10.0f;
-
-        private readonly World _world = new(new AABB
-        {
-            LowerBound = new Vec2(-PHYSICS_INTERVAL, -PHYSICS_INTERVAL).Devide(10.0f),
-            UpperBound = new Vec2(GameBoard.BOARD_SIZE + PHYSICS_INTERVAL, GameBoard.BOARD_SIZE + PHYSICS_INTERVAL)
-                .Devide(10.0f)
-        }, Vec2.Zero, true);
-
-
-        private Ball _selectedBall = null;
-
-        public GameStateMain(Game game)
-        {
-            _game = game;
-            _backgroundLayer.Add(_board);
-        }
-
         public void HandleInput()
         {
             HandleAddBall();
             HandleAddArrow();
+            HandleMoveBall();
+        }
+
+        private void HandleMoveBall()
+        {
             if (InputManager.IsKeyPressed(Keyboard.Key.Space))
                 for (var i = 0; i < _ballBodies.Count; i++)
                 {
@@ -78,28 +84,6 @@ namespace PenguinGameClone
             UpdateArrow();
         }
 
-        private void UpdateVelocity(Time elapsed)
-        {
-            foreach (var ballBody in _ballBodies)
-            {
-                var currentVelocity = ballBody.GetLinearVelocity().ToVector2f();
-                var theta = currentVelocity.Angle();
-                var delta = 5 * elapsed.AsSeconds(); // 5 = gravityAcceleration * coefficient of friction 
-                var deltaVec = new Vector2f((float) Math.Cos(theta), (float) Math.Sin(theta)) * delta;
-                if (currentVelocity.Length() < delta)
-                    ballBody.SetLinearVelocity(Vec2.Zero);
-                else
-                    ballBody.SetLinearVelocity((currentVelocity - deltaVec).ToVec2());
-            }
-        }
-
-        private void UpdateArrow()
-        {
-            if (_selectedBall == null) return;
-
-            _selectedBall.Arrow.Point = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window));
-        }
-
         public void Render()
         {
             _game.Window.Clear(new Color(19, 18, 0));
@@ -112,6 +96,29 @@ namespace PenguinGameClone
                     _game.Window.Draw(ball);
 
             if (_selectedBall != null) _game.Window.Draw(_selectedBall);
+        }
+
+        private void UpdateVelocity(Time elapsed)
+        {
+            foreach (var ballBody in _ballBodies)
+            {
+                var currentVelocity = ballBody.GetLinearVelocity().ToVector2f();
+                var theta = currentVelocity.Angle();
+                var delta = 5 * elapsed.AsSeconds(); // 5 = gravityAcceleration * coefficient of friction 
+                var deltaVec = new Vector2f((float) Math.Cos(theta), (float) Math.Sin(theta)) * delta;
+                ballBody.SetLinearVelocity(
+                    currentVelocity.Length() < delta
+                        ? Vec2.Zero
+                        : (currentVelocity - deltaVec).ToVec2()
+                );
+            }
+        }
+
+        private void UpdateArrow()
+        {
+            if (_selectedBall == null) return;
+
+            _selectedBall.Arrow.Point = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window));
         }
 
         private void HandleAddBall()

@@ -1,5 +1,4 @@
 ﻿using Box2DX.Common;
-using Microsoft.VisualBasic.CompilerServices;
 using SFML.System;
 using Math = System.Math;
 
