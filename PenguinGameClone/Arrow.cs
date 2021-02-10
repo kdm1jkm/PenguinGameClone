@@ -44,6 +44,11 @@ namespace PenguinGameClone
             get => _delta;
             set
             {
+                if (value.Length() < Ball.RADIUS)
+                {
+                    _delta = new Vector2f(.0f, .0f);
+                    return;
+                }
                 _delta = value;
 
                 _rect.Size =
@@ -64,6 +69,10 @@ namespace PenguinGameClone
 
         public void Draw(RenderTarget target, RenderStates states)
         {
+            if (_delta.Length() == .0f)
+            {
+                return;
+            }
             _rect.Draw(target, states);
             _head.Draw(target, states);
         }

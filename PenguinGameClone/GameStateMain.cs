@@ -17,9 +17,9 @@ namespace PenguinGameClone
         private const float PHYSICS_INTERVAL = 10.0f;
 
         private readonly Game _game;
-        
-        private readonly GameBoard _board = new();
-        
+
+        private readonly GameBoard _board = new(GameBoard.STANDARD_SIZE);
+
         private readonly Layer _backgroundLayer = new();
         private readonly Layer _balls = new();
 
@@ -28,8 +28,16 @@ namespace PenguinGameClone
         private readonly World _world;
 
         private View _view;
-        
+
         private Ball _selectedBall;
+
+        private Turn _currentTurn = Turn.BLUE_TURN;
+
+        enum Turn
+        {
+            BLUE_TURN,
+            RED_TURN
+        }
 
         public GameStateMain(Game game)
         {
@@ -38,9 +46,25 @@ namespace PenguinGameClone
             _world = new World(new AABB
             {
                 LowerBound = new Vec2(-PHYSICS_INTERVAL, -PHYSICS_INTERVAL).Devide(10.0f),
-                UpperBound = new Vec2(GameBoard.BOARD_SIZE + PHYSICS_INTERVAL, GameBoard.BOARD_SIZE + PHYSICS_INTERVAL)
-                    .Devide(10.0f)
+                UpperBound =
+                    new Vec2(GameBoard.STANDARD_SIZE.X + PHYSICS_INTERVAL,
+                            GameBoard.STANDARD_SIZE.Y + PHYSICS_INTERVAL)
+                        .Devide(10.0f)
             }, Vec2.Zero, true);
+
+            InitBalls(5);
+        }
+
+        private void InitBalls(int count)
+        {
+            float interval = _board.Size.Y / (count + 1);
+
+            for (int i = 0; i < count; i++)
+            {
+                float yPos = (i + 1) * interval;
+                AddBall(Ball.BallInfo.RED_BALL, new Vector2f(interval, yPos));
+                AddBall(Ball.BallInfo.BLUE_BALL, new Vector2f(_board.Size.Y - interval, yPos));
+            }
         }
 
         private Layer Arrows
@@ -64,11 +88,18 @@ namespace PenguinGameClone
         private void HandleMoveBall()
         {
             if (InputManager.IsKeyPressed(Keyboard.Key.Space))
+            {
                 for (var i = 0; i < _ballBodies.Count; i++)
                 {
                     _ballBodies[i].WakeUp();
                     _ballBodies[i].SetLinearVelocity((((Ball) _balls[i]).Arrow.Delta / 5).ToVec2());
                 }
+
+                foreach (Ball ball in _balls)
+                {
+                    ball.Arrow.Delta = new Vector2f(.0f, .0f);
+                }
+            }
         }
 
         public void Update(Time elapsed)
@@ -130,10 +161,15 @@ namespace PenguinGameClone
             else if (InputManager.IsKeyPressed(Keyboard.Key.S)) team = Ball.BallInfo.BLUE_BALL;
 
             if (team == null) return;
-            var ball = new Ball(team) {Position = mousePosition};
+            AddBall(team, mousePosition);
+        }
+
+        private void AddBall(Ball.BallInfo team, Vector2f position)
+        {
+            var ball = new Ball(team) {Position = position};
             var body = _world.CreateBody(new BodyDef
             {
-                Position = new Vec2(mousePosition.X, mousePosition.Y).Devide(10)
+                Position = new Vec2(position.X, position.Y).Devide(10)
             });
             var circleDef = new CircleDef
             {

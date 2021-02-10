@@ -27,11 +27,12 @@ namespace PenguinGameClone
             };
             Selected = false;
 
-            var random = new Random();
-            var theta = random.NextDouble() * (2 * Math.PI);
-            var length = random.NextDouble() * 5 + 20;
+            // var random = new Random();
+            // var theta = random.NextDouble() * (2 * Math.PI);
+            // var length = random.NextDouble() * 5 + 20;
             Arrow = new Arrow(Arrow.ArrowInfo.BASIC)
-                {Delta = new Vector2f((float) Math.Cos(theta), (float) Math.Sin(theta)) * (float) length};
+                {Delta = new Vector2f(.0f, .0f)};
+            // {Delta = new Vector2f((float) Math.Cos(theta), (float) Math.Sin(theta)) * (float) length};
         }
 
         public Arrow Arrow { get; }

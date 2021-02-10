@@ -5,14 +5,14 @@ namespace PenguinGameClone
 {
     public class GameBoard : IEntity
     {
-        public const float BOARD_SIZE = 100.0f;
+        public static readonly Vector2f STANDARD_SIZE = new Vector2f(100.0f, 100.0f);
         private readonly RectangleShape _shape;
 
-        public GameBoard()
+        public GameBoard(Vector2f boardSize)
         {
             _shape = new RectangleShape
             {
-                Size = new Vector2f(BOARD_SIZE, BOARD_SIZE),
+                Size = boardSize,
                 FillColor = new Color(253, 255, 252)
             };
         }
