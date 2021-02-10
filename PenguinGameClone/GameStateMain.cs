@@ -17,59 +17,122 @@ namespace PenguinGameClone
         private readonly GameBoard _board = new();
 
         private readonly Layer _backgroundLayer = new();
+
         private readonly Layer _balls = new();
+
+        // private readonly Layer _arrows = new();
+        private Layer Arrows
+        {
+            get
+            {
+                var layer = new Layer();
+                foreach (Ball ball in _balls) layer.Add(ball.Arrow);
+
+                return layer;
+            }
+        }
+
         private readonly List<Body> _ballBodies = new();
-        private readonly List<Layer> _layers;
         private readonly Game _game;
         private View _view;
         private const float PHYSICS_INTERVAL = 10.0f;
-        private World _world = new World(new AABB()
+
+        private readonly World _world = new(new AABB
         {
-            LowerBound = new Vec2(-PHYSICS_INTERVAL,y: -PHYSICS_INTERVAL).Devide(10.0f),
+            LowerBound = new Vec2(-PHYSICS_INTERVAL, -PHYSICS_INTERVAL).Devide(10.0f),
             UpperBound = new Vec2(GameBoard.BOARD_SIZE + PHYSICS_INTERVAL, GameBoard.BOARD_SIZE + PHYSICS_INTERVAL)
                 .Devide(10.0f)
         }, Vec2.Zero, true);
 
+
+        private Ball _selectedBall = null;
+
         public GameStateMain(Game game)
         {
             _game = game;
-            _layers = new List<Layer>
-            {
-                _backgroundLayer,
-                _balls
-            };
             _backgroundLayer.Add(_board);
         }
 
         public void HandleInput()
         {
             HandleAddBall();
+            HandleAddArrow();
+            if (InputManager.IsKeyPressed(Keyboard.Key.Space))
+                for (var i = 0; i < _ballBodies.Count; i++)
+                {
+                    _ballBodies[i].WakeUp();
+                    _ballBodies[i].SetLinearVelocity((((Ball) _balls[i]).Arrow.Delta / 5).ToVec2());
+                }
+        }
+
+        public void Update(Time elapsed)
+        {
+            _world.Step(elapsed.AsSeconds(), 8, 8);
+
+            UpdateVelocity(elapsed);
+
+            RemoveInvalidEntity();
+            UpdateEntities(elapsed);
+            UpdateView(5.0f);
+            UpdateSelectedBall();
+            UpdateArrow();
+        }
+
+        private void UpdateVelocity(Time elapsed)
+        {
+            foreach (var ballBody in _ballBodies)
+            {
+                var currentVelocity = ballBody.GetLinearVelocity().ToVector2f();
+                var theta = currentVelocity.Angle();
+                var delta = 5 * elapsed.AsSeconds(); // 5 = gravityAcceleration * coefficient of friction 
+                var deltaVec = new Vector2f((float) Math.Cos(theta), (float) Math.Sin(theta)) * delta;
+                if (currentVelocity.Length() < delta)
+                    ballBody.SetLinearVelocity(Vec2.Zero);
+                else
+                    ballBody.SetLinearVelocity((currentVelocity - deltaVec).ToVec2());
+            }
+        }
+
+        private void UpdateArrow()
+        {
+            if (_selectedBall == null) return;
+
+            _selectedBall.Arrow.Point = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window));
+        }
+
+        public void Render()
+        {
+            _game.Window.Clear(new Color(19, 18, 0));
+            _game.Window.Draw(_backgroundLayer);
+            _game.Window.Draw(_balls);
+            _game.Window.Draw(Arrows);
+
+            foreach (Ball ball in _balls)
+                if (ball.Selected)
+                    _game.Window.Draw(ball);
+
+            if (_selectedBall != null) _game.Window.Draw(_selectedBall);
         }
 
         private void HandleAddBall()
         {
             var mousePosition = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window));
             Ball.BallInfo team = null;
-            if (InputManager.IsKeyHeld(Keyboard.Key.A))
-            {
+            if (InputManager.IsKeyPressed(Keyboard.Key.A))
                 team = Ball.BallInfo.RED_BALL;
-            }
-            else if (InputManager.IsKeyHeld(Keyboard.Key.S))
-            {
-                team = Ball.BallInfo.BLUE_BALL;
-            }
+            else if (InputManager.IsKeyPressed(Keyboard.Key.S)) team = Ball.BallInfo.BLUE_BALL;
 
             if (team == null) return;
-            Ball ball = new Ball(team) {Position = mousePosition};
-            Body body = _world.CreateBody(new BodyDef
+            var ball = new Ball(team) {Position = mousePosition};
+            var body = _world.CreateBody(new BodyDef
             {
                 Position = new Vec2(mousePosition.X, mousePosition.Y).Devide(10)
             });
-            CircleDef circleDef = new CircleDef()
+            var circleDef = new CircleDef
             {
-                Radius = Ball.RADIUS/10,
+                Radius = Ball.RADIUS / 10,
                 Density = 1.0f,
-                Friction = .5f,
+                Friction = .5f
             };
             body.CreateShape(circleDef);
             body.SetMassFromShapes();
@@ -77,17 +140,35 @@ namespace PenguinGameClone
             _balls.Add(ball);
         }
 
-        public void Update(Time elapsed)
+        private void HandleAddArrow()
         {
-            _world.Step(elapsed.AsSeconds(), 8, 8);
-            List<int> removeIndexes = new List<int>();
-            for (int i = 0; i < _ballBodies.Count; i++)
+            if (InputManager.IsButtonPressed(Mouse.Button.Left))
             {
-                _balls[i].Position = _ballBodies[i].GetPosition().ToVector2f()*10;
-                if (_ballBodies[i].IsFrozen() || !_board.IsContain(_balls[i].Position))
-                {
-                    removeIndexes.Insert(0, i);
-                }
+                Ball targetBall = null;
+                foreach (Ball ball in _balls)
+                    if (ball.Selected)
+                    {
+                        targetBall = ball;
+                        break;
+                    }
+
+                if (targetBall == null) return;
+
+                _selectedBall = targetBall;
+            }
+            else if (InputManager.IsButtonReleased(Mouse.Button.Left))
+            {
+                _selectedBall = null;
+            }
+        }
+
+        private void RemoveInvalidEntity()
+        {
+            var removeIndexes = new List<int>();
+            for (var i = 0; i < _ballBodies.Count; i++)
+            {
+                _balls[i].Position = _ballBodies[i].GetPosition().ToVector2f() * 10;
+                if (_ballBodies[i].IsFrozen() || !_board.IsContain(_balls[i].Position)) removeIndexes.Insert(0, i);
             }
 
             foreach (var index in removeIndexes)
@@ -95,20 +176,23 @@ namespace PenguinGameClone
                 _balls.RemoveAt(index);
                 _ballBodies.RemoveAt(index);
             }
-            UpdateEntities(elapsed);
-            UpdateView(10.0f);
-            UpdateSelectedBall();
         }
 
         private void UpdateSelectedBall()
         {
-            float criteria = Ball.RADIUS * 1.1f;
-            float minLength = float.MaxValue;
+            if (_selectedBall != null)
+            {
+                _selectedBall.Selected = true;
+                return;
+            }
+
+            var criteria = Ball.RADIUS * 1.1f;
+            var minLength = float.MaxValue;
             Ball minLengthBall = null;
             foreach (Ball ball in _balls)
             {
-                Vector2f diff = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window)) - ball.Position;
-                float length = (float) Math.Sqrt(Math.Pow(diff.X, 2) + Math.Pow(diff.Y, 2));
+                var diff = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window)) - ball.Position;
+                var length = diff.Length();
                 if (length < minLength)
                 {
                     minLength = length;
@@ -116,10 +200,7 @@ namespace PenguinGameClone
                 }
             }
 
-            if (minLength < criteria)
-            {
-                minLengthBall!.Selected = true;
-            }
+            if (minLength < criteria) minLengthBall!.Selected = true;
         }
 
         private void UpdateView(float interval)
@@ -147,27 +228,7 @@ namespace PenguinGameClone
 
         private void UpdateEntities(Time elapsed)
         {
-            foreach (var entity in _layers.SelectMany(layer => layer))
-            {
-                entity.Update(elapsed);
-            }
-        }
-
-        public void Render()
-        {
-            _game.Window.Clear(new Color(19,18,0));
-            foreach (var layer in _layers)
-            {
-                _game.Window.Draw(layer);
-            }
-
-            foreach (var ball in _balls)
-            {
-                if (((Ball) ball).Selected)
-                {
-                    _game.Window.Draw(ball);
-                }
-            }
+            foreach (var entity in _balls) entity.Update(elapsed);
         }
     }
 }

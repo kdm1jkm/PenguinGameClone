@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using System;
+using SFML.Graphics;
 using SFML.System;
 
 namespace PenguinGameClone
@@ -8,19 +9,19 @@ namespace PenguinGameClone
         public class BallInfo
         {
             public static readonly BallInfo RED_BALL =
-                new BallInfo(new Color(179,39,30), new Color(231,123,115));
+                new(new Color(179, 39, 30), new Color(231, 123, 115));
 
             public static readonly BallInfo BLUE_BALL =
-                new BallInfo(new Color(10, 36, 99), new Color(20, 75, 204));
-            
-            BallInfo(Color basicColor, Color selectedColor)
+                new(new Color(10, 36, 99), new Color(20, 75, 204));
+
+            private BallInfo(Color basicColor, Color selectedColor)
             {
                 BasicColor = basicColor;
                 SelectedColor = selectedColor;
             }
+
             public Color BasicColor { get; }
             public Color SelectedColor { get; }
-            
         }
 
         public const float RADIUS = 3.0f;
@@ -29,6 +30,10 @@ namespace PenguinGameClone
         private readonly BallInfo _info;
 
         private bool _selected;
+
+        private Arrow _arrow;
+
+        public Arrow Arrow => _arrow;
 
         public bool Selected
         {
@@ -62,18 +67,25 @@ namespace PenguinGameClone
                 FillColor = _info.BasicColor
             };
             Selected = false;
+
+            var random = new Random();
+            var theta = random.NextDouble() * (2 * Math.PI);
+            var length = random.NextDouble() * 5 + 20;
+            _arrow = new Arrow(Arrow.ArrowInfo.BASIC)
+                {Delta = new Vector2f((float) Math.Cos(theta), (float) Math.Sin(theta)) * (float) length};
         }
 
 
         public Vector2f Position
         {
             get => _shape.Position;
-            set => _shape.Position = value;
+            set => _shape.Position = _arrow.Position = value;
         }
 
         public void Draw(RenderTarget target, RenderStates states)
         {
             _shape.Draw(target, states);
+            _arrow.Draw(target, states);
         }
 
         public void Update(Time elapsed)

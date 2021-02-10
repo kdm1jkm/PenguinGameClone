@@ -7,15 +7,15 @@ namespace PenguinGameClone
     public class GameBoard : IEntity
     {
         private readonly RectangleShape _shape;
-        
-        public const  float BOARD_SIZE = 100.0f;
+
+        public const float BOARD_SIZE = 100.0f;
 
         public GameBoard()
         {
             _shape = new RectangleShape
             {
-                Size = new Vector2f(BOARD_SIZE,BOARD_SIZE),
-                FillColor = new Color(253,255,252)
+                Size = new Vector2f(BOARD_SIZE, BOARD_SIZE),
+                FillColor = new Color(253, 255, 252)
             };
         }
 
@@ -28,10 +28,19 @@ namespace PenguinGameClone
         public Vector2f Size
         {
             get => _shape.Size;
-            set => _shape.Size = value;
+            set
+            {
+                var center = Center;
+                _shape.Size = value;
+                Center = center;
+            }
         }
 
-        public Vector2f Center => _shape.Position + _shape.Size / 2;
+        public Vector2f Center
+        {
+            get => _shape.Position + _shape.Size / 2;
+            set => _shape.Position = value - _shape.Size / 2;
+        }
 
         public bool IsContain(Vector2f position)
         {

@@ -5,7 +5,7 @@ using SFML.Graphics;
 
 namespace PenguinGameClone
 {
-    public class Layer : Drawable,IEnumerable<IEntity>
+    public class Layer : Drawable, IEnumerable<IEntity>
     {
         private readonly List<IEntity> _drawables;
 
@@ -18,6 +18,7 @@ namespace PenguinGameClone
 
         public void Add(IEntity value)
         {
+            // Console.Out.WriteLine($"[DBG]Layer Add entity: {value}");
             _drawables.Add(value);
         }
 
@@ -30,13 +31,10 @@ namespace PenguinGameClone
         {
             _drawables.RemoveAt(index);
         }
-        
+
         public void Draw(RenderTarget target, RenderStates states)
         {
-            foreach (var drawable in _drawables)
-            {
-                drawable.Draw(target, states);
-            }
+            foreach (var drawable in _drawables) drawable.Draw(target, states);
         }
 
         public IEnumerator<IEntity> GetEnumerator()

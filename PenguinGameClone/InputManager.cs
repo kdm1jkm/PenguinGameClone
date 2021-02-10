@@ -20,7 +20,7 @@ namespace PenguinGameClone
             ReleasedKeys.Clear();
 
             PressedButtons.Clear();
-            PressedButtons.Clear();
+            ReleasedButtons.Clear();
         }
 
         public static void PressKey(Key key)

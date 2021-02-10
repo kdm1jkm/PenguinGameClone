@@ -8,7 +8,7 @@ namespace PenguinGameClone
 {
     public class Game
     {
-        private static readonly string WindowTitle = "DeveloperRPG";
+        private static readonly string WindowTitle = "PenguinGame";
         public readonly Queue<IGameState> States = new();
         private bool _isFullScreen;
         public uint Height = VideoMode.DesktopMode.Height / 2;
