@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Box2DX.Collision;
 using Box2DX.Common;
 using Box2DX.Dynamics;
@@ -31,13 +32,7 @@ namespace PenguinGameClone
 
         private Ball _selectedBall;
 
-        private Turn _currentTurn = Turn.BLUE_TURN;
-
-        enum Turn
-        {
-            BLUE_TURN,
-            RED_TURN
-        }
+        private Ball.Team _currentTurn = Ball.Team.BLUE;
 
         public GameStateMain(Game game)
         {
@@ -82,23 +77,36 @@ namespace PenguinGameClone
         {
             HandleAddBall();
             HandleAddArrow();
-            HandleMoveBall();
+            HandleNextTurn();
         }
 
-        private void HandleMoveBall()
+        private void HandleNextTurn()
         {
             if (InputManager.IsKeyPressed(Keyboard.Key.Space))
             {
-                for (var i = 0; i < _ballBodies.Count; i++)
-                {
-                    _ballBodies[i].WakeUp();
-                    _ballBodies[i].SetLinearVelocity((((Ball) _balls[i]).Arrow.Delta / 5).ToVec2());
-                }
+                if (_currentTurn == Ball.Team.NONE)
+                    _currentTurn = Ball.Team.BEG;
+                else
+                    _currentTurn += 1;
 
-                foreach (Ball ball in _balls)
+                if (_currentTurn == Ball.Team.NONE)
                 {
-                    ball.Arrow.Delta = new Vector2f(.0f, .0f);
+                    MoveBall();
                 }
+            }
+        }
+
+        private void MoveBall()
+        {
+            for (var i = 0; i < _ballBodies.Count; i++)
+            {
+                _ballBodies[i].WakeUp();
+                _ballBodies[i].SetLinearVelocity((((Ball) _balls[i]).Arrow.Delta/3).ToVec2());
+            }
+
+            foreach (Ball ball in _balls)
+            {
+                ball.Arrow.Delta = new Vector2f(.0f, .0f);
             }
         }
 
@@ -113,6 +121,13 @@ namespace PenguinGameClone
             UpdateView(5.0f);
             UpdateSelectedBall();
             UpdateArrow();
+            if (_currentTurn == Ball.Team.NONE)
+            {
+                if (_ballBodies.All(ball => ball.IsSleeping()))
+                {
+                    _currentTurn = Ball.Team.BEG;
+                }
+            }
         }
 
         public void Render()
@@ -120,8 +135,33 @@ namespace PenguinGameClone
             _game.Window.Clear(new Color(19, 18, 0));
             _game.Window.Draw(_backgroundLayer);
             _game.Window.Draw(_balls);
-            _game.Window.Draw(Arrows);
+            RenderCurrentTurnArrow();
+            RenderSelectedBall();
+            
+            // Absolute view
+            _game.Window.SetView(_game.Window.DefaultView);
+            
+            // Current Team
+            _game.Window.Draw(new Text(
+                $"Team: {_currentTurn.ToString()}"
+                ,_game.Font
+                )
+            {
+                Position = new Vector2f(0, 0),
+                FillColor = Color.White,
+                OutlineColor = Color.Black
+            });
+        }
 
+        private void RenderCurrentTurnArrow()
+        {
+            foreach (Ball ball in _balls)
+                if (ball.CurrentTeam == _currentTurn)
+                    _game.Window.Draw(ball.Arrow);
+        }
+
+        private void RenderSelectedBall()
+        {
             foreach (Ball ball in _balls)
                 if (ball.Selected)
                     _game.Window.Draw(ball);
@@ -142,6 +182,8 @@ namespace PenguinGameClone
                         ? Vec2.Zero
                         : (currentVelocity - deltaVec).ToVec2()
                 );
+                if (ballBody.GetLinearVelocity() == Vec2.Zero) 
+                    ballBody.PutToSleep();
             }
         }
 
@@ -187,15 +229,10 @@ namespace PenguinGameClone
         {
             if (InputManager.IsButtonPressed(Mouse.Button.Left))
             {
-                Ball targetBall = null;
-                foreach (Ball ball in _balls)
-                    if (ball.Selected)
-                    {
-                        targetBall = ball;
-                        break;
-                    }
+                Ball targetBall = _balls.Cast<Ball>().FirstOrDefault(ball => ball.Selected);
 
                 if (targetBall == null) return;
+                if (targetBall.CurrentTeam != _currentTurn) return;
 
                 _selectedBall = targetBall;
             }
@@ -234,6 +271,10 @@ namespace PenguinGameClone
             Ball minLengthBall = null;
             foreach (Ball ball in _balls)
             {
+                if (ball.CurrentTeam != _currentTurn)
+                {
+                    continue;
+                }
                 var diff = _game.Window.MapPixelToCoords(Mouse.GetPosition(_game.Window)) - ball.Position;
                 var length = diff.Length();
                 if (length < minLength)

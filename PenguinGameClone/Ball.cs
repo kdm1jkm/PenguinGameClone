@@ -15,6 +15,16 @@ namespace PenguinGameClone
 
         private bool _selected;
 
+        public readonly Team CurrentTeam;
+
+        public enum Team
+        {
+            BEG,
+            BLUE=BEG,
+            RED,
+            NONE
+        }
+
         public Ball(BallInfo info)
         {
             _info = info;
@@ -26,13 +36,10 @@ namespace PenguinGameClone
                 FillColor = _info.BasicColor
             };
             Selected = false;
+            CurrentTeam = info.Team;
 
-            // var random = new Random();
-            // var theta = random.NextDouble() * (2 * Math.PI);
-            // var length = random.NextDouble() * 5 + 20;
             Arrow = new Arrow(Arrow.ArrowInfo.BASIC)
                 {Delta = new Vector2f(.0f, .0f)};
-            // {Delta = new Vector2f((float) Math.Cos(theta), (float) Math.Sin(theta)) * (float) length};
         }
 
         public Arrow Arrow { get; }
@@ -70,21 +77,26 @@ namespace PenguinGameClone
             public static readonly BallInfo RED_BALL =
                 new(
                     new Color(179, 39, 30), 
-                    new Color(231, 123, 115));
+                    new Color(231, 123, 115),
+                    Team.RED);
 
             public static readonly BallInfo BLUE_BALL =
                 new(
                     new Color(10, 36, 99), 
-                    new Color(20, 75, 204));
+                    new Color(20, 75, 204),
+                    Team.BLUE);
 
-            private BallInfo(Color basicColor, Color selectedColor)
+            private BallInfo(Color basicColor, Color selectedColor, Team team)
             {
                 BasicColor = basicColor;
                 SelectedColor = selectedColor;
+                Team = team;
             }
 
             public Color BasicColor { get; }
             public Color SelectedColor { get; }
+            
+            public Team Team { get; }
         }
     }
 }

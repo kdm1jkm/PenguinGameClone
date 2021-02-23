@@ -10,6 +10,8 @@ namespace PenguinGameClone
         private static readonly string WindowTitle = "PenguinGame";
         public readonly Queue<IGameState> States = new();
         private bool _isFullScreen;
+
+        public readonly Font Font = new Font("Resources/font/CookieRun Bold.ttf");
         
         public uint Height = VideoMode.DesktopMode.Height / 2;
         public uint Width = VideoMode.DesktopMode.Width / 2;
